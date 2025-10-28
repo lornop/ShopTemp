@@ -28,7 +28,7 @@
 //#define MQTT_USER ""
 //#define MQTT_KEY  ""
 
-#define MQTT_HOST "wintermute.redirectme.net"
+// #define MQTT_HOST "wintermute.redirectme.net"
 #define MQTT_PORT 1883
 String newHostname = "SHOPESP32";
 
