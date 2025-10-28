@@ -21,12 +21,15 @@
 #include <Wire.h>
 
 /************************* WIFI + MQTT CONFIG *************************/
-#define WLAN_SSID "ciphertextbravo"
-#define WLAN_PASS "6MariJuana9"
+#include "../secrets.h"   // This now provides all credentials
+
+//#define WLAN_SSID ""
+//#define WLAN_PASS ""
+//#define MQTT_USER ""
+//#define MQTT_KEY  ""
+
 #define MQTT_HOST "wintermute.redirectme.net"
 #define MQTT_PORT 1883
-#define MQTT_USER "lorno"
-#define MQTT_KEY  "6MariJuana9163804"
 String newHostname = "SHOPESP32";
 
 /************************* MQTT TOPICS *************************/
