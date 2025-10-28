@@ -93,10 +93,6 @@ unsigned long lastWiFiAttempt = 0;
 bool wifiConnecting = false;
 unsigned long connectStartTime = 0;
 
-
-// unsigned long lastWiFiSuccess = 0;
-// const unsigned long WIFI_FAIL_REBOOT_TIME = 300000; // 5 minutes
-
 /************************* LCD CUSTOM CHARACTERS *************************/
 byte full_box[8] = {0b11111,0b11111,0b11111,0b11111,0b11111,0b11111,0b11111,0b11111};
 
@@ -278,38 +274,6 @@ void ensureWiFiConnected() {
     ESP.restart();
   }
 }
-
-
-// void ensureWiFiConnected() {
-//   if (WiFi.status() == WL_CONNECTED) {
-//     lastWiFiSuccess = millis();
-//     return;
-//   }
-
-//   Serial.println("WiFi lost — reconnecting...");
-//   WiFi.disconnect(true);
-//   delay(500);
-//   WiFi.begin(WLAN_SSID, WLAN_PASS);
-
-//   unsigned long startAttempt = millis();
-//   while (WiFi.status() != WL_CONNECTED && millis() - startAttempt < 15000) {
-//     delay(500);
-//     Serial.print(".");
-//   }
-
-//   if (WiFi.status() == WL_CONNECTED) {
-//     Serial.println("\n[OK] WiFi reconnected");
-//     Serial.print("IP: ");
-//     Serial.println(WiFi.localIP());
-//     lastWiFiSuccess = millis();
-//   } else {
-//     Serial.println("\n[WARN] WiFi reconnect failed");
-//     if (millis() - lastWiFiSuccess > WIFI_FAIL_REBOOT_TIME) {
-//       Serial.println("[REBOOT] WiFi down too long, restarting...");
-//       ESP.restart();
-//     }
-//   }
-// }
 
 /*********************************************************************
    MQTT HANDLER (RECONNECT LOGIC)
