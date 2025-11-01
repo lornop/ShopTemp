@@ -79,6 +79,9 @@ uint32_t intervalMillis = 60000;     // 1 minute sensor update
 TaskHandle_t Core1;
 TaskHandle_t Core2;
 
+SemaphoreHandle_t dhtMutex;   //Creates and Mutual Exclusion lock for the MQTT variables (temp and hum) so theres no race conditions
+
+
 
 /**************************** WIFI  VARIABLES ****************************/
 
@@ -129,6 +132,9 @@ void setup() {
 
   // Initialize DHT sensor
   dht.begin();
+  dhtMutex = xSemaphoreCreateMutex();  // Initialize the mutex
+
+
 
   // Initialize I/O pins
   pinMode(heater_out, OUTPUT);
@@ -303,9 +309,44 @@ void ensureMQTTConnected() {
    DHT SENSOR READ
 *********************************************************************/
 void GET_DHT() {
-  hum = dht.readHumidity();
-  temp = dht.readTemperature();
+  float humSum = 0;
+  float tempSum = 0;
+  int validHumCount = 0;
+  int validTempCount = 0;
+
+  if (xSemaphoreTake(dhtMutex, (TickType_t)10) == pdTRUE) {   //Get Exclusive access to dht Variables
+    for (int16_t x = 0; x < 5; x++) {
+      float h = dht.readHumidity();
+      float t = dht.readTemperature();
+
+      if (!isnan(h)) {
+        humSum += h;
+        validHumCount++;
+      }
+
+      if (!isnan(t)) {
+        tempSum += t;
+        validTempCount++;
+      }
+
+      delay(10);
+    }
+
+    if (validHumCount > 0)
+      hum = humSum / validHumCount;
+    else
+      hum = hum;  // Just send the last value
+
+    if (validTempCount > 0)
+      temp = tempSum / validTempCount;
+    else
+      temp = temp;
+  
+    xSemaphoreGive(dhtMutex);     //Release access to DHT Variables
+  }
+  
 }
+
 
 /*********************************************************************
    MQTT SUBSCRIPTION READ (REMOTE CONTROL)
@@ -328,11 +369,21 @@ void GET_MQTT() {
    MQTT PUBLISH (SEND SENSOR DATA)
 *********************************************************************/
 void PUBLISH_TEMP_HUM() {
+  float t;
+  float h;
+
   if (!mqtt.connected()) return;
-  temperature.publish(temp);
-  humidity.publish(hum);
+  if (xSemaphoreTake(dhtMutex, (TickType_t)100) == pdTRUE) {
+    t = temp;
+    h = hum;
+    xSemaphoreGive(dhtMutex);
+  }
+
+  temperature.publish(t);
+  humidity.publish(h);
   timeleft_pub.publish(time_left);
-  Serial.printf("[PUB] Temp: %.1f C, Hum: %.1f%%, Time Left: %.2f h\n", temp, hum, time_left);
+  Serial.printf("[PUB] Temp: %.1f C, Hum: %.1f%%, Time Left: %.2f h\n", t, h, time_left);
+
 }
 
 /*********************************************************************
